@@ -1,0 +1,173 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <!--<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>-->
+    <script src="jquery-3.2.1.min.js"></script>
+</head>
+<body>
+
+
+    <script>
+        $.ajaxSettings.async = false;
+
+        var Titles = [];
+        var Values = [];
+
+        var titles1 = [];
+        var values1 = [];
+
+        var titles2 = [];
+        var values2 = [];
+
+        var titles3 = [];
+        var values3 = [];
+
+        var titles4 = [];
+        var values4 = [];
+
+        var titles5 = [];
+        var values5 = [];
+    
+        var titles6 = [];
+        var values6 = [];
+
+        var titles7 = [];
+        var values7 = [];
+
+        var titles8 = [];
+        var values8 = [];
+
+        var titles9 = [];
+        var values9 = [];
+
+
+
+
+        $.getJSON("JSON/adelaide/Title.json", function (data) {
+            for (var i = 0; i < data.length; i++) {
+                Titles.push(data[i]);
+            }         
+        })
+
+        $.getJSON("JSON/adelaide/Value.json", function (data) {
+            for (var j = 0; j < data.length; j++) {
+                Values.push(data[j]);
+            }
+        })
+
+
+        //1995  2005  2010  2011 2012  2013  2014  2015  2016
+
+        for (var k = 0; k < Titles.length; k++) {
+            var karray = Titles[k].split("_");
+            switch (karray[karray.length - 1]) {
+                case "1995":
+                    titles1.push(Titles[k]);
+                    values1.push(Values[k]);
+                    break;
+                case "2005":
+                    titles2.push(Titles[k]);
+                    values2.push(Values[k]);
+                    break;
+                case "2010":
+                    titles3.push(Titles[k]);
+                    values3.push(Values[k]);
+                    break;
+                case "2011":
+                    titles4.push(Titles[k]);
+                    values4.push(Values[k]);
+                    break;
+                case "2012":
+                    titles5.push(Titles[k]);
+                    values5.push(Values[k]);
+                    break;
+                case "2013":
+                    titles6.push(Titles[k]);
+                    values6.push(Values[k]);
+                    break;
+                case "2014":
+                    titles7.push(Titles[k]);
+                    values7.push(Values[k]);
+                    break;
+                case "2015":
+                    titles8.push(Titles[k]);
+                    values8.push(Values[k]);
+                    break;
+                case "2016":
+                    titles9.push(Titles[k]);
+                    values9.push(Values[k]);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        console.log(JSON.stringify(titles1));
+        console.log(JSON.stringify(values1)); 
+
+        console.log(titles9);
+        console.log(values9);
+
+        console.log(Titles);
+        console.log(Values);
+        var array = data[i].split("_");
+        console.log(array);
+
+
+
+
+
+        
+        $.getJSON("JSON/sydney/data112307891694088543.json", function (data) {
+
+           var a = data.features;
+           for (var i = 0; i < a.length; i++) {
+               for (var key in a[i].properties) {
+                   if (Titles.indexOf(key) == -1)
+                   {
+                       Titles.push(key);
+                       Values.push(a[i].properties[key]);//ȡ��value
+                   } else {
+                       var index = Titles.indexOf(key);
+                       Values[index] += a[i].properties[key];
+                   }
+               }
+           }
+
+           $.getJSON("JSON/sydney/data3431814295837395939.json", function (data) {
+               var a = data.features;
+               for (var i = 0; i < a.length; i++) {
+                   for (var key in a[i].properties) {
+                       if (Titles.indexOf(key) == -1) {
+                           Titles.push(key);
+                           Values.push(a[i].properties[key]);//get value
+                       } else {
+                           var index = Titles.indexOf(key);
+                           Values[index] += a[i].properties[key];
+                       }
+                   }
+               }
+               console.log(Titles);
+               console.log(Values);
+               var c = JSON.stringify(Titles);
+               var d = JSON.stringify(Values);
+
+               console.log(c);
+               console.log(d);
+
+           })
+        })
+
+
+        $.getJSON("JSON/brisbane/Value.json", function (data) {
+           console.log(data);
+        })
+     
+        $.getJSON("JSON/brisbane/Title.json", function (data) {
+           console.log(data);
+        })
+
+
+    </script>
+</body>
+</html>
