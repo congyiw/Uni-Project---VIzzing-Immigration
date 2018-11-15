@@ -1,0 +1,1134 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--CSS-->
+    <link href="http://libs.baidu.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="leaflet.css">
+
+    <!--JavaScript-->
+    <script src="https://apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://libs.baidu.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script src="main.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Migration map</title>
+    <style>
+        .leaflet-popup-content {
+            margin: 11px 11px;
+            line-height: 0.4;
+        }
+
+        .leaflet-popup-content {
+            width: 70px !important;
+        }
+
+        a {
+            display: none;
+        }
+
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        p {
+            color: white;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 20px
+        }
+
+        .area-btn {
+            height: 100%;
+            float: left;
+        }
+
+
+
+        #forkongithub a {
+            background: #000;
+            color: #fff;
+            text-decoration: none;
+            font-family: arial,sans-serif;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 40px;
+            font-size: 1rem;
+            line-height: 2rem;
+            position: relative;
+            transition: 0.5s;
+        }
+
+            #forkongithub a:hover {
+                background: #c11;
+                color: #fff;
+            }
+
+            #forkongithub a::before, #forkongithub a::after {
+                content: "";
+                width: 100%;
+                display: block;
+                position: absolute;
+                top: 1px;
+                left: 0;
+                height: 1px;
+                background: #fff;
+            }
+
+            #forkongithub a::after {
+                bottom: 1px;
+                top: auto;
+            }
+
+        @media screen and (min-width:800px) {
+            #forkongithub {
+                position: fixed;
+                display: block;
+                top: 0;
+                right: 0;
+                width: 200px;
+                overflow: hidden;
+                height: 200px;
+                z-index: 9999;
+            }
+
+                #forkongithub a {
+                    width: 200px;
+                    position: absolute;
+                    top: 60px;
+                    right: -60px;
+                    transform: rotate(45deg);
+                    -webkit-transform: rotate(45deg);
+                    -ms-transform: rotate(45deg);
+                    -moz-transform: rotate(45deg);
+                    -o-transform: rotate(45deg);
+                    box-shadow: 4px 4px 10px rgba(0,0,0,0.8);
+                }
+        }
+
+        .label {
+            font-weight: 900;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <!--HTML--AREA-->
+    <div id="map" style="position:relative;">
+        <div style="position:absolute;top:10px;left:400px;z-index:1000">
+            <lable class="label">Select Time</lable>
+            <select id="select1">
+                <option value="255">Please Select Time</option>
+                <option value="0">1986-1995</option>
+                <option value="1">1996-2005</option>
+                <option value="2">2006-2010</option>
+                <option value="3">2011</option>
+                <option value="4">2012</option>
+                <option value="5">2013</option>
+                <option value="6">2014</option>
+                <option value="7">2015</option>
+                <option value="8">2016</option>
+            </select>
+        </div>
+
+        <div style="position:absolute;top:10px;left:650px;z-index:1000">
+            <lable class="label">City</lable>
+            <select id="select2">
+                <option value="255">Please Select City</option>
+                <option value="0">Melbourne</option>
+                <option value="1">Sydney</option>
+                <option value="2">Adelaide</option>
+                <option value="3">Brisbane</option>
+                <option value="4">Hobart</option>
+                <option value="5">Canberra</option>
+                <option value="6">Perth</option>
+                <option value="7">Darwin</option>
+                <option value="8">All</option>
+            </select>
+        </div>
+        <div style="position:absolute;top:10px;left:850px;z-index:1000">
+            <input type="button" class="area-btn btn-info" style="float:left" onclick="searchData()" value="Search" />
+        </div>
+
+        <div style="position:absolute;top:10px;left:950px;z-index:1000;display:block">
+            <input type="button" class="area-btn btn-info" style="float:left" onclick="actionData()" value="Animation" />
+        </div>
+
+        <div style="position:absolute;top:50px;left:450px;z-index:1000">
+            <span id="title" style="color:#c11;font-size:29px;"></span>
+        </div>
+    </div>
+
+    <!- load the map -->
+    <script>
+        var map = L.map('map');
+        L.tileLayer('http://ditu.google.cn/maps/vt/pb=!1m4!1m3!1i{z}!2i{x}!3i{y}!2m3!1e0!2sm!3i345013117!3m8!2sen-US!3scn!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0').addTo(map);
+        map.setView(L.latLng(17.81146, 37.96875), 2);
+        var overlay = new L.echartsLayer3(map, echarts);
+        var chartsContainer = overlay.getEchartsContainer();
+        var myChart = overlay.initECharts(chartsContainer);
+    </script>
+
+    <!--global variables-->
+    <script>
+        var myTitles = []//final title
+        var myValues = [];//final value
+      
+        var Titles = [];
+        var Values = [];
+
+        var titles1 = [];//1986 - 1995
+        var values1 = [];
+
+        var titles2 = [];//1996 - 2005
+        var values2 = [];
+
+        var titles3 = [];//2006 - 2010
+        var values3 = [];
+
+        var titles4 = [];//2011
+        var values4 = [];
+
+        var titles5 = [];//2012
+        var values5 = [];
+
+        var titles6 = [];//2013
+        var values6 = [];
+
+        var titles7 = [];//2014
+        var values7 = [];
+
+        var titles8 = [];//2015
+        var values8 = [];
+
+        var titles9 = [];//2016
+        var values9 = [];      
+
+        var myLayer = L.layerGroup().addTo(map);
+        var myLayer1 = L.layerGroup().addTo(map);
+
+        //city sites
+        var Marker111;
+        var Marker222;
+        var Marker33;
+        var Marker44;
+        var Marker55;
+        var Marker66;
+        var Marker77;
+        var Marker88;
+        var Marker99;
+
+        $.ajaxSettings.async = false;//not allow the Asynchronous Loading
+    </script>
+
+
+    <script>
+
+        //set the link between cities and countries
+        function setCity(selectCity) {
+            var geoCoordMap = {
+                'macedonia': [21.7, 41.6],
+                'southafrica': [25, -30],
+                'srilanka': [81, 7],
+                'thailand': [101.3, 15.4],
+                'turkey': [32.833333, 39.916667],
+                'uk': [-3, 55],
+                'usa': [-100, 40],
+                'vietnam': [107.833333, 16.166667],
+                'zimbabwe': [30, -20],
+                'canada': [-95, 60],
+                'china': [103, 35],
+                'croatia': [15.5, 45.166667],
+                'egypt': [30, 26],
+                'fiji': [179, -18],
+                'germany': [9, 51],
+                'greece': [22, 39],
+                'hongkong': [114.2, 22.3],
+                'india': [78, 21],
+                'indonesia': [120, -5],
+                'iran': [53, 32],
+                'iraq': [44, 33],
+                'ireland': [-8, 53.416667],
+
+                //Main city
+                'melbourne': [144.963065, -37.813611],
+                'sydney': [151.209444, -33.865],
+                'adelaide': [138.601111, -34.928889],
+                'brisbane': [153.033333, -27.466667],
+                'hobart': [147.325, -42.880556],
+                'canberra': [149.124417, -35.3075],
+                'perth': [115.858889, -31.952222],
+                'darwin': [130.833333, -12.45],
+                'australia': [137.4609375000,-25.3241665257]
+            };
+
+            var data1 = [
+                [{ name: 'macedonia' }, { name: selectCity }],
+            ];
+
+            var data2 = [
+                [{ name: 'southafrica' }, { name: selectCity }],
+            ];
+
+            var data3 = [
+                [{ name: 'srilanka' }, { name: selectCity }],
+            ];
+
+            var data4 = [
+                [{ name: 'thailand' }, { name: selectCity }],
+            ];
+
+            var data5 = [
+                [{ name: 'turkey' }, { name: selectCity }],
+            ];
+
+            var data6 = [
+                [{ name: 'uk' }, { name: selectCity }],
+            ];
+
+            var data7 = [
+                [{ name: 'usa' }, { name: selectCity }],
+            ];
+
+            var data8 = [
+                [{ name: 'vietnam' }, { name: selectCity }],
+            ];
+
+            var data9 = [
+                [{ name: 'zimbabwe' }, { name: selectCity }],
+            ];
+
+            var data10 = [
+                [{ name: 'canada' }, { name: selectCity }],
+            ];
+
+            var data11 = [
+                [{ name: 'china' }, { name: selectCity }],
+            ];
+
+            var data12 = [
+                [{ name: 'croatia' }, { name: selectCity }],
+            ];
+
+            var data13 = [
+                [{ name: 'egypt' }, { name: selectCity }],
+            ];
+
+            var data14 = [
+                [{ name: 'fiji' }, { name: selectCity }],
+            ];
+
+            var data15 = [
+                [{ name: 'germany' }, { name: selectCity }],
+            ];
+
+            var data16 = [
+                [{ name: 'greece' }, { name: selectCity }],
+            ];
+
+            var data17 = [
+                [{ name: 'hongkong' }, { name: selectCity }],
+            ];
+
+            var data18 = [
+                [{ name: 'india' }, { name: selectCity }],
+            ];
+
+            var data19 = [
+                [{ name: 'indonesia' }, { name: selectCity }],
+            ];
+
+            var data20 = [
+                [{ name: 'iran' }, { name: selectCity }],
+            ];
+
+            var data21 = [
+                [{ name: 'iraq' }, { name: selectCity }],
+            ];
+
+            var data22 = [
+                [{ name: 'ireland' }, { name: selectCity }],
+            ];
+
+
+            var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
+
+            var convertData = function (data) {
+                var res = [];
+                for (var i = 0; i < data.length; i++) {
+                    var dataItem = data[i];
+                    var fromCoord = geoCoordMap[dataItem[0].name];
+                    var toCoord = geoCoordMap[dataItem[1].name];
+                    if (fromCoord && toCoord) {
+                        res.push([{
+                            coord: fromCoord
+                        }, {
+                            coord: toCoord
+                        }]);
+                    }
+                }
+                return res;
+            };
+
+            var color = ['#ff0000', '#ffa022', '#46bee9', "#000000", "#778899", "#191970", "#7B68EE", "##0000FF", "#00FFFF", "#006400", "#00FF7F", "#6B8E23", "#FFFF00", "#FF0000", "#FF1493", "#FF4500", "#8B0A50", "#305612", "	#9AC0CD", "	#9B30FF", "	#FFBBFF", "	#27408B", "	#00008B"];
+            var series = [];
+
+            [['d1', data1], ['d2', data2], ['d3', data3], ['d4', data4], ['d5', data5], ['d6', data6], ['d7', data7], ['d8', data8], ['d9', data9], ['d10', data10], ['d11', data11], ['d12', data12], ['d13', data13], ['d14', data14], ['d15', data15], ['d16', data16], ['d17', data17], ['d18', data18], ['d19', data19], ['d20', data20], ['d21', data21], ['d22', data22]].forEach(function (item, i) {
+                series.push({
+                    name: item[0] + ' Top10',
+                    type: 'lines',
+                    zlevel: 1,
+                    effect: {
+                        show: true,
+                        period: 6,
+                        trailLength: 0.7,
+                        color: '#fff',
+                        symbolSize: 3
+                    },
+                    lineStyle: {
+                        normal: {
+                            color: color[i],
+                            width: 0,
+                            curveness: 0.2
+                        }
+                    },
+                    data: convertData(item[1])
+                },
+                    {
+                        name: item[0] + ' Top10',
+                        type: 'lines',
+                        zlevel: 2,
+                        effect: {
+                            show: true,
+                            period: 6,
+                            trailLength: 0,
+                            symbol: planePath,
+                            symbolSize: 15
+                        },
+                        lineStyle: {
+                            normal: {
+                                color: color[i],
+                                width: 1,
+                                opacity: 0.4,
+                                curveness: 0.2
+                            }
+                        },
+                        data: convertData(item[1])
+                    },
+                    {
+                        name: item[0] + ' Top10',
+                        type: 'effectScatter',
+                        coordinateSystem: 'geo',
+                        zlevel: 2,
+                        rippleEffect: {
+                            brushType: 'stroke'
+                        },
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'right',
+                                formatter: '{b}'
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] / 8;
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: color[i]
+                            }
+                        },
+                        data: item[1].map(function (dataItem) {
+                            return {
+                                name: dataItem[1].name,
+                                value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
+                            };
+                        })
+                    });
+            });
+
+            option = {
+                title: {
+                    left: 'center',
+                    textStyle: {
+                        color: '#ff0000'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    top: 'bottom',
+                    left: 'right',
+
+                    textStyle: {
+                        color: '#ff0000'
+                    },
+                    selectedMode: 'single'
+                },
+                geo: {
+                    map: '',
+                    label: {
+                        emphasis: {
+                            show: false
+                        }
+                    },
+                    roam: true,
+                    itemStyle: {
+                        normal: {
+                            areaColor: '#ff0000',
+                            borderColor: '#ff0000'
+                        },
+                        emphasis: {
+                            areaColor: '#ff0000'
+                        }
+                    }
+                },
+                series: series
+            };
+            //use the pointed item and data to show the graph
+            overlay.setOption(option, true);
+        }
+
+        //search button action
+        function searchData() {
+            var s1 = $("#select1").val();
+            var s2 = $("#select2").val();
+            var index1 = document.getElementById("select1").selectedIndex;//get the items index.
+            var s11 = document.getElementById("select1").options[index1].text;//get the items value.
+            var index2 = document.getElementById("select2").selectedIndex;//get the items index.
+            var s22 = document.getElementById("select2").options[index2].text;//get the items value.
+            if (s1 == "255" || s2 == "255") {
+                alert("Please Select Year And City");
+                return;
+            }
+            $("#title").html(" Other Countries to " + s22 + " in  " + s11);
+
+            //clean data
+            myTitles = [];
+            myValues = [];
+            Titles = []; Values = [];
+            titles1 = [];
+            titles2 = [];
+            titles3 = [];
+            titles4 = [];
+            titles5 = [];
+            titles6 = [];
+            titles7 = [];
+            titles8 = [];
+            titles9 = [];
+            values1 = [];
+            values2 = [];
+            values3 = [];
+            values4 = [];
+            values5 = [];
+            values6 = [];
+            values7 = [];
+            values8 = [];
+            values9 = [];
+
+            //read json file
+            $.getJSON("JSON/" + s22 + "/Title.json", function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    Titles.push(data[i]);
+                }
+            })
+
+            $.getJSON("JSON/" + s22+"/Value.json", function (data) {
+                for (var j = 0; j < data.length; j++) {
+                    Values.push(data[j]);
+                }
+            })
+
+            for (var k = 0; k < Titles.length; k++) {
+                var karray = Titles[k].split("_");
+                switch (karray[karray.length - 1]) {
+                    case "1995":
+                    case "95":
+                        titles1.push(Titles[k]);
+                        values1.push(Values[k]);
+                        break;
+                    case "2005":
+                    case "05":
+                        titles2.push(Titles[k]);
+                        values2.push(Values[k]);
+                        break;
+                    case "2010":
+                    case "10":
+                        titles3.push(Titles[k]);
+                        values3.push(Values[k]);
+                        break;
+                    case "2011":
+                        titles4.push(Titles[k]);
+                        values4.push(Values[k]);
+                        break;
+                    case "2012":
+                        titles5.push(Titles[k]);
+                        values5.push(Values[k]);
+                        break;
+                    case "2013":
+                        titles6.push(Titles[k]);
+                        values6.push(Values[k]);
+                        break;
+                    case "2014":
+                        titles7.push(Titles[k]);
+                        values7.push(Values[k]);
+                        break;
+                    case "2015":
+                        titles8.push(Titles[k]);
+                        values8.push(Values[k]);
+                        break;
+                    case "2016":
+                        titles9.push(Titles[k]);
+                        values9.push(Values[k]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            switch (s1) {
+                case "0":
+                    myTitles = titles1;
+                    myValues = values1;
+                    break;
+                case "1":
+                    myTitles = titles2;
+                    myValues = values2;
+                    break;
+                case "2":
+                    myTitles = titles3;
+                    myValues = values3;
+                    break;
+                case "3":
+                    myTitles = titles4;
+                    myValues = values4;
+                    break;
+                case "4":
+                    myTitles = titles5;
+                    myValues = values5;
+                    break;
+                case "5":
+                    myTitles = titles6;
+                    myValues = values6;
+                    break;
+                case "6":
+                    myTitles = titles7;
+                    myValues = values7;
+                    break;
+                case "7":
+                    myTitles = titles8;
+                    myValues = values8;
+                    break;
+                case "8":
+                    myTitles = titles9;
+                    myValues = values9;
+                    break;
+            }
+
+            console.log(myTitles);
+            console.log(myValues);
+
+            //set the label size
+            myLayer.clearLayers();
+            setTB();
+
+            myLayer1.clearLayers();//clear the layers
+            //to show the destination and link the line
+            switch (s2) {
+                case "0":
+                    setCity("melbourne");
+                    myLayer1.addLayer(Marker111);
+                    break;
+                case "1":
+                    setCity("sydney");
+                    myLayer1.addLayer(Marker222);
+                    break;
+                case "2":
+                    setCity("adelaide");
+                    myLayer1.addLayer(Marker33);
+                    break;
+                case "3":
+                    setCity("brisbane");
+                    myLayer1.addLayer(Marker44);
+                    break;
+                case "4":
+                    setCity("hobart");
+                    myLayer1.addLayer(Marker55);
+                    break;
+                case "5":
+                    setCity("canberra");
+                    myLayer1.addLayer(Marker66);
+                    break;
+                case "6":
+                    setCity("perth");
+                    myLayer1.addLayer(Marker77);
+                    break;
+                case "7":
+                    setCity("darwin");
+                    myLayer1.addLayer(Marker88);
+                    break;
+                case "8":
+                    setCity("australia");
+                    myLayer1.addLayer(Marker99);
+                    break;
+            }         
+        }
+
+        function setTB() {
+            var total=0;
+            //get the average value
+            for (var w = 0; w < myValues.length; w++) {
+                total += myValues[w];
+            }
+            var AVG = total / myValues.length;
+
+            //define marker
+            var Marker1,
+                Marker2,
+                Marker3,
+                Marker4,
+                Marker5,
+                Marker6,
+                Marker7,
+                Marker8,
+                Marker9,
+                Marker10,
+                Marker11,
+                Marker12,
+                Marker13,
+                Marker14,
+                Marker15,
+                Marker16,
+                Marker17,
+                Marker18,
+                Marker19,
+                Marker20,
+                Marker21,
+                Marker22;
+
+            //adjust the country
+            for (var h = 0; h < myTitles.length; h++) {
+                var arr = myTitles[h].split("_");
+
+                var va = myValues[h] / AVG;
+                        if (va<0.5) {
+                            va = 0.5;
+                        }
+                        if (va>6) {
+                            va = 6;
+                        }
+                switch (arr[0]) {
+                    case "fiji":                    
+                        var iconHtml14 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon14 = L.divIcon({ className: 'wind-div-icon', html: iconHtml14 });
+                        Marker14 = L.marker([-18, 179], { icon: myIcon14 });
+                        myLayer.addLayer(Marker14);
+                        Marker14.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "croatia":
+                        var iconHtml12 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon12 = L.divIcon({ className: 'wind-div-icon', html: iconHtml12 });
+                        Marker12 = L.marker([45.166667, 15.5], { icon: myIcon12 });
+                        myLayer.addLayer(Marker12);
+                        Marker12.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "iraq":
+                        var iconHtml21 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon21 = L.divIcon({ className: 'wind-div-icon', html: iconHtml21 });
+                        Marker21 = L.marker([33, 44], { icon: myIcon21 });
+                        myLayer.addLayer(Marker21);
+                        Marker21.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "iran":
+                        var iconHtml20 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon20 = L.divIcon({ className: 'wind-div-icon', html: iconHtml20 });
+                        Marker20 = L.marker([32, 53], { icon: myIcon20 });
+                        myLayer.addLayer(Marker20);
+                        Marker20.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "canada":
+                        var iconHtml10 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon10 = L.divIcon({ className: 'wind-div-icon', html: iconHtml10 });
+                        Marker10 = L.marker([60, -95], { icon: myIcon10 });
+                        myLayer.addLayer(Marker10);
+                        Marker10.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "ireland":
+                        var iconHtml22 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon22 = L.divIcon({ className: 'wind-div-icon', html: iconHtml22 });
+                        Marker22 = L.marker([53.416667, -8], { icon: myIcon22 });
+                        myLayer.addLayer(Marker22);
+                        Marker22.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "hng":
+                    case "hong":
+                        var iconHtml17 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon17= L.divIcon({ className: 'wind-div-icon', html: iconHtml17 });
+                        Marker17 = L.marker([22.3, 114.2], { icon: myIcon17 });
+                        myLayer.addLayer(Marker17);
+                        Marker17.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "germany":
+                        var iconHtml15 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon15 = L.divIcon({ className: 'wind-div-icon', html: iconHtml15 });
+                        Marker15 = L.marker([51, 9], { icon: myIcon15 });
+                        myLayer.addLayer(Marker15);
+                        Marker15.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "indonesia":
+                        var iconHtml19 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon19 = L.divIcon({ className: 'wind-div-icon', html: iconHtml19 });
+                        Marker19 = L.marker([-5, 120], { icon: myIcon19 });
+                        myLayer.addLayer(Marker19);
+                        Marker19.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "greece":
+                        var iconHtml16 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon16 = L.divIcon({ className: 'wind-div-icon', html: iconHtml16 });
+                        Marker16 = L.marker([39, 22], { icon: myIcon16 });
+                        myLayer.addLayer(Marker16);
+                        Marker16.bindPopup("" + myValues[h] + "");
+                        break;
+
+                    case "egypt":
+                        var iconHtml13 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon13 = L.divIcon({ className: 'wind-div-icon', html: iconHtml13 });
+                        Marker13 = L.marker([26, 30], { icon: myIcon13 });
+                        myLayer.addLayer(Marker13);
+                        Marker13.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "india":
+                        var iconHtml18 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon18 = L.divIcon({ className: 'wind-div-icon', html: iconHtml18 });
+                        Marker18 = L.marker([21, 78], { icon: myIcon18 });
+                        myLayer.addLayer(Marker18);
+                        Marker18.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "sri":
+                        var iconHtml3 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon3 = L.divIcon({ className: 'wind-div-icon', html: iconHtml3 });
+                        Marker3 = L.marker([7, 81], { icon: myIcon3 });
+                        myLayer.addLayer(Marker3);
+                        Marker3.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "usa":
+                        var iconHtml7 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon7 = L.divIcon({ className: 'wind-div-icon', html: iconHtml7 });
+                        Marker7 = L.marker([40, -100], { icon: myIcon7 });
+                        myLayer.addLayer(Marker7);
+                        Marker7.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "south":
+                        var iconHtml2 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon2= L.divIcon({ className: 'wind-div-icon', html: iconHtml2 });
+                        Marker2 = L.marker([-30, 25], { icon: myIcon2 });
+                        myLayer.addLayer(Marker2);
+                        Marker2.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "united":
+                        if (arr[1] == "states") {
+                            var iconHtml7 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                            var myIcon7 = L.divIcon({ className: 'wind-div-icon', html: iconHtml7 });
+                            Marker7 = L.marker([40, -100], { icon: myIcon7 });
+                            myLayer.addLayer(Marker7);
+                            Marker7.bindPopup("" + myValues[h] + "");
+                            break;
+                        }
+                        var iconHtml6 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon6 = L.divIcon({ className: 'wind-div-icon', html: iconHtml6 });
+                        Marker6 = L.marker([55, -3], { icon: myIcon6 });
+                        myLayer.addLayer(Marker6);
+                        Marker6.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "zimbabwe":
+                        var iconHtml9 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon9 = L.divIcon({ className: 'wind-div-icon', html: iconHtml9 });
+                        Marker9 = L.marker([-20, 30], { icon: myIcon9 });
+                        myLayer.addLayer(Marker9);
+                        Marker9.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "thailand":
+                        var iconHtml4= '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon4 = L.divIcon({ className: 'wind-div-icon', html: iconHtml4 });
+                        Marker4 = L.marker([15.4, 101.3], { icon: myIcon4 });
+                        myLayer.addLayer(Marker4);
+                        Marker4.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "vietnam":
+                        var iconHtml8= '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon8 = L.divIcon({ className: 'wind-div-icon', html: iconHtml8 });
+                        Marker8 = L.marker([16.166667, 107.833333], { icon: myIcon8 });
+                        myLayer.addLayer(Marker8);
+                        Marker8.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "turkey":
+                        var iconHtml5 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon5 = L.divIcon({ className: 'wind-div-icon', html: iconHtml5 });
+                        Marker5 = L.marker([39.916667, 32.833333], { icon: myIcon5 });
+                        myLayer.addLayer(Marker5);
+                        Marker5.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "fmr":
+                        var iconHtml1 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon1 = L.divIcon({ className: 'wind-div-icon', html: iconHtml1 });
+                        Marker1 = L.marker([41.6, 21.7], { icon: myIcon1 });
+                        myLayer.addLayer(Marker1);
+                        Marker1.bindPopup("" + myValues[h] + "");
+                        break;
+                    case "china":
+                        var iconHtml11 = '<svg t="1540388737106" class="icon" style="width: ' + va + 'em; height: ' + va + 'em; vertical - align: middle; fill: currentColor; overflow: hidden; " viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2328"><path d="M927.232 465.408c-83.968 11.264-240.64 23.552-356.864-115.2-102.912-123.392-221.696-129.024-284.672-120.832V133.12c25.088-9.216 43.52-32.768 44.032-60.928 0.512-35.328-28.16-66.048-63.488-67.584-37.888-1.536-69.12 28.672-69.12 66.048 0 28.672 18.432 53.248 44.032 61.952v775.68c0 11.776 9.216 22.528 20.992 23.04 12.8 0.512 23.04-9.216 23.04-22.016v-267.776c43.008-24.576 124.416-50.688 270.848-39.424 199.68 15.36 311.296-77.312 376.832-120.832 7.68-5.12 3.584-17.408-5.632-15.872zM263.68 92.16c-12.288 0-22.016-9.728-22.016-22.016s9.728-22.016 22.016-22.016 22.016 9.728 22.016 22.016-9.728 22.016-22.016 22.016z" p-id="2329" fill="#d81e06" data-spm-anchor-id="a313x.7781069.0.i3"></path><path d="M357.376 856.576c-13.312-4.096-27.136 6.144-27.136 19.968 0 9.728 6.656 17.92 15.872 20.48 30.72 8.192 50.688 20.48 50.688 34.816 0 20.48-42.496 37.888-99.84 43.008-3.584 1.024-6.656 1.536-10.752 1.536h-44.032c-3.584 0-7.168-0.512-10.752-1.536-57.344-4.608-99.84-22.016-99.84-43.008 0-14.336 19.968-26.624 50.688-34.816 9.216-2.56 15.872-10.752 15.872-20.48 0-14.336-13.824-24.064-27.136-19.968-50.176 15.36-83.456 43.52-83.456 74.752 0 48.64 79.36 88.576 176.64 88.576 97.792 0 176.64-39.424 176.64-88.576-0.512-31.232-33.792-58.88-83.456-74.752z" p-id="2330" fill="#d81e06"></path></svg>';
+                        var myIcon11 = L.divIcon({ className: 'wind-div-icon', html: iconHtml11 });
+                        Marker11 = L.marker([35, 103], { icon: myIcon11 });
+                        myLayer.addLayer(Marker11);
+                        Marker11.bindPopup("" + myValues[h] + "");
+                        break;
+
+                }
+            }
+               
+            var iconHtml2 = '<svg t="1541212302179" class="icon" style="width: 1.75em; height: 1.36em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1211 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2475"><path d="M563.2 568.32m-360.106667 0a360.106667 360.106667 0 1 0 720.213334 0 360.106667 360.106667 0 1 0-720.213334 0Z" fill="#E9EAEB" p-id="2476"></path><path d="M430.08 40.96h1.706667-1.706667z m0 0c-22.186667 0-39.253333 18.773333-39.253333 40.96v740.693333h80.213333V81.92c0-22.186667-18.773333-39.253333-40.96-40.96z" fill="#FFFFFF" p-id="2477"></path><path d="M488.106667 839.68h-114.346667V81.92c0-32.426667 25.6-58.026667 58.026667-58.026667 17.066667 0 34.133333 8.533333 44.373333 22.186667L448.853333 68.266667c-5.12-6.826667-10.24-8.533333-17.066666-8.533334-13.653333 0-23.893333 10.24-23.893334 23.893334v723.626666h46.08V136.533333h34.133334v703.146667z" fill="#2A5082" p-id="2478"></path><path d="M247.466667 805.546667h525.653333v34.133333H247.466667z" fill="#2A5082" p-id="2479"></path><path d="M954.026667 401.066667s81.92-100.693333 105.813333-168.96c-107.52 30.72-327.68 18.773333-351.573333 0v302.08c40.96 59.733333 296.96 34.133333 382.293333-15.36-66.56-47.786667-136.533333-117.76-136.533333-117.76z" fill="#A3D4FF" p-id="2480"></path><path d="M841.386667 587.093333c-66.56 0-124.586667-11.946667-145.066667-40.96l-3.413333-5.12v-85.333333h34.133333V529.066667c37.546667 37.546667 233.813333 29.013333 332.8-13.653334-59.733333-46.08-114.346667-100.693333-117.76-102.4l-11.946667-10.24 10.24-11.946666s59.733333-71.68 90.453334-133.12c-92.16 17.066667-240.64 13.653333-305.493334 0v88.746666h-34.133333v-146.773333l27.306667 22.186667c23.893333 13.653333 232.106667 27.306667 336.213333-3.413334l30.72-8.533333-8.533333 29.013333c-20.48 56.32-76.8 133.12-98.986667 162.133334 22.186667 20.48 75.093333 69.973333 124.586667 105.813333l20.48 15.36-22.186667 13.653333c-49.493333 27.306667-163.84 51.2-259.413333 51.2z" fill="#2A5082" p-id="2481"></path><path d="M790.186667 168.96l-80.213334 47.786667v303.786666l15.36 15.36 80.213334-80.213333V201.386667z" fill="#E9EAEB" p-id="2482"></path><path d="M725.333333 559.786667l-32.426666-32.426667v-71.68h34.133333v54.613333l61.44-61.44V204.8l-6.826667-11.946667-63.146666 39.253334-18.773334-29.013334 97.28-58.026666 25.6 51.2v266.24z" fill="#2A5082" p-id="2483"></path><path d="M805.546667 139.946667C727.04 78.506667 452.266667 75.093333 390.826667 136.533333v303.786667c88.746667-37.546667 276.48-51.2 397.653333 0h17.066667V139.946667z" fill="#A3D4FF" p-id="2484"></path><path d="M373.76 465.92V129.706667l5.12-5.12c68.266667-68.266667 349.866667-66.56 436.906667 1.706666l6.826666 5.12v325.973334H785.066667l-3.413334-1.706667c-119.466667-51.2-303.786667-34.133333-384 0l-23.893333 10.24z m218.453333-76.8c68.266667 0 139.946667 10.24 196.266667 32.426667v-273.066667c-78.506667-51.2-317.44-52.906667-380.586667-5.12v271.36c49.493333-15.36 116.053333-25.6 184.32-25.6z" fill="#2A5082" p-id="2485"></path><path d="M453.973333 136.533333h34.133334v238.933334h-34.133334zM805.546667 805.546667h63.146666v34.133333h-63.146666zM901.12 805.546667h32.426667v34.133333h-32.426667zM182.613333 805.546667h32.426667v34.133333h-32.426667z" fill="#2A5082" p-id="2486" data-spm-anchor-id="a313x.7781069.0.i6"></path><path d="M534.186667 822.613333H325.973333v-46.08c0-18.773333 15.36-34.133333 34.133334-34.133333h138.24c18.773333 0 34.133333 15.36 34.133333 34.133333v46.08z" fill="#FFFFFF" p-id="2487"></path><path d="M551.253333 839.68H308.906667v-63.146667c0-29.013333 22.186667-51.2 51.2-51.2h138.24c29.013333 0 51.2 22.186667 51.2 51.2v63.146667z m-208.213333-34.133333h172.373333v-29.013334c0-10.24-6.826667-17.066667-17.066666-17.066666h-138.24c-10.24 0-17.066667 6.826667-17.066667 17.066666v29.013334zM501.76 885.76h206.506667v34.133333H501.76zM295.253333 965.973333h303.786667v34.133334H295.253333zM119.466667 885.76h256v34.133333H119.466667z" fill="#2A5082" p-id="2488"></path></svg>';
+            var myIcon2 = L.divIcon({ className: 'wind-div-icon', html: iconHtml2 });
+
+            Marker111 = L.marker([-37.813611, 144.963065], { icon: myIcon2 });
+            Marker222 = L.marker([-33.865, 151.209444], { icon: myIcon2 });
+            Marker33 = L.marker([-34.928889, 138.601111], { icon: myIcon2 });
+            Marker44 = L.marker([-27.466667, 153.033333], { icon: myIcon2 });
+
+            Marker55 = L.marker([-42.880556, 147.325], { icon: myIcon2 });
+            Marker66 = L.marker([-35.3075, 149.124417], { icon: myIcon2 });
+            Marker77 = L.marker([-31.952222, 115.858889], { icon: myIcon2 });
+            Marker88 = L.marker([-12.45, 130.833333], { icon: myIcon2 });
+            Marker99 = L.marker([-25.3241665257,137.4609375000], { icon: myIcon2 });
+
+
+         
+            //myLayer.addLayer(Marker2);
+            //myLayer.addLayer(Marker3);
+            //myLayer.addLayer(Marker4);
+            //myLayer.addLayer(Marker5);
+            //myLayer.addLayer(Marker6);
+            //myLayer.addLayer(Marker7);
+            //myLayer.addLayer(Marker8);
+            //myLayer.addLayer(Marker9);
+            //myLayer.addLayer(Marker10);
+            //myLayer.addLayer(Marker11);
+            //myLayer.addLayer(Marker12);
+            //myLayer.addLayer(Marker13);
+            //myLayer.addLayer(Marker14);
+            //myLayer.addLayer(Marker15);
+            //myLayer.addLayer(Marker16);
+            //myLayer.addLayer(Marker17);
+            //myLayer.addLayer(Marker18);
+            //myLayer.addLayer(Marker19);
+            //myLayer.addLayer(Marker20);
+            //myLayer.addLayer(Marker21);
+            //myLayer.addLayer(Marker22);
+
+            //Marker1.bindPopup("" + v1 + "");
+            //Marker2.bindPopup("" + v2 + "");
+            //Marker3.bindPopup("" + v3 + "");
+            //Marker4.bindPopup("" + v4 + "");
+            //Marker5.bindPopup('' + v5 + '');
+            //Marker6.bindPopup("" + v6 + "");
+            //Marker7.bindPopup("" + v7 + "");
+            //Marker8.bindPopup("" + v8 + "");
+            //Marker9.bindPopup("" + v9 + "");
+            //Marker10.bindPopup("" + v10 + "");
+            //Marker11.bindPopup("" + v11 + "");
+            //Marker12.bindPopup("" + v12 + "");
+            //Marker13.bindPopup("" + v13 + "");
+            //Marker14.bindPopup("" + v14 + "");
+            //Marker15.bindPopup("" + v15 + "");
+            //Marker16.bindPopup("" + v16 + "");
+            //Marker17.bindPopup("" + v17 + "");
+            //Marker18.bindPopup("" + v18 + "");
+            //Marker19.bindPopup("" + v19 + "");
+            //Marker20.bindPopup("" + v20 + "");
+            //Marker21.bindPopup("" + v21 + "");
+            //Marker22.bindPopup("" + v22 + "");
+        }
+
+        var num = 0;
+        var t1;
+        var thisCity;
+        var ss2;
+        //animation
+        function actionData() {
+            var s2 = $("#select2").val();
+            ss2 = s2;
+            var index2 = document.getElementById("select2").selectedIndex;//get the current index
+            var s22 = document.getElementById("select2").options[index2].text;//get the current value
+            thisCity = s22;
+            if (s2 == "255") {
+                alert("Please Select City");
+                return;
+            }
+            //set title1~9 and value1~value9
+            $.getJSON("JSON/" + s22 + "/Title.json", function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    Titles.push(data[i]);
+                }
+            })
+
+            $.getJSON("JSON/" + s22 + "/Value.json", function (data) {
+                for (var j = 0; j < data.length; j++) {
+                    Values.push(data[j]);
+                }
+            })
+
+            for (var k = 0; k < Titles.length; k++) {
+                var karray = Titles[k].split("_");
+                switch (karray[karray.length - 1]) {
+                    case "1995":
+                    case "95":
+                        titles1.push(Titles[k]);
+                        values1.push(Values[k]);
+                        break;
+                    case "2005":
+                    case "05":
+                        titles2.push(Titles[k]);
+                        values2.push(Values[k]);
+                        break;
+                    case "2010":
+                    case "10":
+                        titles3.push(Titles[k]);
+                        values3.push(Values[k]);
+                        break;
+                    case "2011":
+                        titles4.push(Titles[k]);
+                        values4.push(Values[k]);
+                        break;
+                    case "2012":
+                        titles5.push(Titles[k]);
+                        values5.push(Values[k]);
+                        break;
+                    case "2013":
+                        titles6.push(Titles[k]);
+                        values6.push(Values[k]);
+                        break;
+                    case "2014":
+                        titles7.push(Titles[k]);
+                        values7.push(Values[k]);
+                        break;
+                    case "2015":
+                        titles8.push(Titles[k]);
+                        values8.push(Values[k]);
+                        break;
+                    case "2016":
+                        titles9.push(Titles[k]);
+                        values9.push(Values[k]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            t1 = window.setInterval(repet, 1500);           
+        }
+
+        //repeat funtion
+        function repet() {
+            switch (num) {
+                case 0:                
+                    $("#title").html(" Other Countries to " + thisCity + " in   1986-1995");
+                    console.log($("#title").html());
+                    myTitles = titles1;
+                    myValues = values1;
+                    break;
+                case 1:
+                    $("#title").html(" Other Countries to " + thisCity + " in   1996 - 2005");
+                    myTitles = titles2;
+                    myValues = values2;
+                    break;
+                case 2:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2006 - 2010");
+                    myTitles = titles3;
+                    myValues = values3;
+                    break;
+                case 3:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2011");
+                    myTitles = titles4;
+                    myValues = values4;
+                    break;
+                case 4:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2012");
+                    myTitles = titles5;
+                    myValues = values5;
+                    break;
+                case 5:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2013");
+                    myTitles = titles6;
+                    myValues = values6;
+                    break;
+                case 6:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2014");
+                    myTitles = titles7;
+                    myValues = values7;
+                    break;
+                case 7:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2015");
+                    myTitles = titles8;
+                    myValues = values8;
+                    break;
+                case 8:
+                    $("#title").html(" Other Countries to " + thisCity + " in   2016");
+                    myTitles = titles9;
+                    myValues = values9;
+                    break;
+            }
+
+            //set label size
+            myLayer.clearLayers();
+            setTB();
+
+            myLayer1.clearLayers();//clear layer
+            //set the desteniation link the line
+            switch (ss2) {
+                case "0":
+                    setCity("melbourne");
+                    myLayer1.addLayer(Marker111);
+                    break;
+                case "1":
+                    setCity("sydney");
+                    myLayer1.addLayer(Marker222);
+                    break;
+                case "2":
+                    setCity("adelaide");
+                    myLayer1.addLayer(Marker33);
+                    break;
+                case "3":
+                    setCity("brisbane");
+                    myLayer1.addLayer(Marker44);
+                    break;
+                case "4":
+                    setCity("hobart");
+                    myLayer1.addLayer(Marker55);
+                    break;
+                case "5":
+                    setCity("canberra");
+                    myLayer1.addLayer(Marker66);
+                    break;
+                case "6":
+                    setCity("perth");
+                    myLayer1.addLayer(Marker77);
+                    break;
+                case "7":
+                    setCity("darwin");
+                    myLayer1.addLayer(Marker88);
+                    break;
+                case "8":
+                    setCity("australia");
+                    myLayer1.addLayer(Marker99);
+            }      
+
+            num++;
+            if (num>8) {
+                window.clearInterval(t1);//clear the timer
+            }          
+        }
+
+    </script>
+</body>
+</html>
